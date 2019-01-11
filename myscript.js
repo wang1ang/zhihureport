@@ -37,14 +37,29 @@ var addReportButton = function () {
                 let http = new XMLHttpRequest();
                 http.open("POST", url, true);
                 http.setRequestHeader('x-requested-with', 'fetch');
-                const id = buttons[index].parentElement.parentElement.parentElement.getAttribute("name");
-                http.send(JSON.stringify({
-                    "resource_id": id,
-                    "type": "answer",
-                    "reason_type": "spam",
-                    "custom_reason": "垃圾广告",
-                    "source": "web"
-                }));
+                const container = buttons[index].parentElement.parentElement.parentElement;
+                const itemType = container.getAttribute("itemprop");
+                
+                if (itemType === "answer") {
+                    const id = container.getElementsByTagName("meta")[0].getAttribute("content").match(/question\/(\d+)/)[1];
+                    http.send(JSON.stringify({
+                        "resource_id": id,
+                        "type": "question",
+                        "reason_type": "spam",
+                        "custom_reason": "垃圾广告",
+                        "source": "web"
+                    }));
+                } else if (itemType === "article") {
+                    const id = container.getElementsByTagName("a")[0].getAttribute("href").match(/p\/(\d+)/)[1];
+                    http.send(JSON.stringify({
+                        "resource_id": id,
+                        "type": "article",
+                        "reason_type": "spam",
+                        "custom_reason": "垃圾广告",
+                        "source": "web"
+                    }));
+                }
+
                 http.onload = function () {
                     console.log('举报' + (http.status === 200 ? '成功' : (http.status === 400 ? '重复' : '失败'))
                         + ": " + (reportButton.parentElement.parentElement.parentElement.querySelector(".Highlight").innerText));
@@ -60,7 +75,7 @@ var zhihuReportSpamAll = function () {
     const ids = document.querySelectorAll("a.ContentItem-action");
     const url = 'https://www.zhihu.com/api/v4/reports';
     for (let index = 0; index < ids.length; index++) {
-        let http = new XMLHttpRequest();        
+        let http = new XMLHttpRequest();
         http.open("POST", url, true);
         http.setRequestHeader('x-requested-with', 'fetch');
         const id = ids[index].href.match(/question\/(\d+)/)[1];
@@ -71,7 +86,7 @@ var zhihuReportSpamAll = function () {
             "custom_reason": "垃圾广告",
             "source": "web"
         }));
-    }    
+    }
 }
 
 addReportButton();
